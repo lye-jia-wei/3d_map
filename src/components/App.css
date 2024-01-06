@@ -1,0 +1,51 @@
+body {
+  box-sizing: border-box;
+  /* use system fonts */
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+}
+
+/* no higlight for form elements */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none;
+}
+
+header {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  left: 0;
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  max-width: 300px;
+}
+
+header .title {
+  line-height: 40px;
+}
+
+header .logo {
+  height: 40px;
+}
+
+.center {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: inherit;
+  margin-left: 10px;
+  text-transform: uppercase;
+  vertical-align: top;
+}
+
+header p.help-text {
+  margin: 0;
+  padding-top: 15px;
+  line-height: 25px;
+  font-size: 15px;
+}
+
+header p.help-text:first-of-type {
+  border-top: 1px solid #888;
+}
