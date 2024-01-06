@@ -82,7 +82,7 @@ export function fetchWeatherForUserPoint(id) {
     const lngLat = state.userPoints[id].lngLat;
     const { lng, lat } = lngLat;
 
-    const url = `//api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=imperial&APPID=${OPEN_WEATHER_APP_ID}`;
+    const url = `//api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&APPID=${OPEN_WEATHER_APP_ID}`;
 
     try {
       const res = await fetch(url);
