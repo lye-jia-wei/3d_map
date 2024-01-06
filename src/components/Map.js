@@ -28,7 +28,7 @@ class Map extends React.Component {
     const map = new mapboxgl.Map({
       container: this.mapContainer,
       style: 'mapbox://styles/mapbox/dark-v10',
-      center: [-87.6229706, 41.8867756],
+      center: [1.409254, 103.914063],
       zoom: 16,
       pitch: 60,
       bearing: -20,
@@ -80,7 +80,7 @@ class Map extends React.Component {
     const aonCenterLayer = layerManager.getCustomObjLayer({
       id: 'aon-center',
       filePath: process.env.PUBLIC_URL + '/aon-center.obj',
-      origin: [-87.6215000, 41.8852500],
+      origin: [1.409254, 103.914063],
       scale: 0.537,
     });
     map.addLayer(aonCenterLayer);
