@@ -79,7 +79,7 @@ class Map extends React.Component {
     // source: https://www.turbosquid.com/3d-models/simply-city-street-3ds-free/337573
     const aonCenterLayer = layerManager.getCustomObjLayer({
       id: 'aon-center',
-      filePath: process.env.PUBLIC_URL + '/Building.obj',
+      filePath: process.env.PUBLIC_URL + '/aon-center.obj',
       origin: [103.91721586504343,1.4060810835492106],
       scale: 0.537,
     });
