@@ -87,7 +87,7 @@ class Map extends React.Component {
 
     const aonCenterLayer2 = layerManager.getCustomObjLayer({
       id: 'aon-center2',
-      filePath: process.env.PUBLIC_URL + '/Building.obj',
+      filePath: process.env.PUBLIC_URL + '/aon-center.obj',
       origin: [103.91927166313951,1.404140424510686],
       scale: 0.937,
     });
