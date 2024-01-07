@@ -85,14 +85,6 @@ class Map extends React.Component {
     });
     map.addLayer(aonCenterLayer);
 
-    const aonCenterLayer2 = layerManager.getCustomObjLayer({
-      id: 'aon-center2',
-      filePath: process.env.PUBLIC_URL + '/aon-center.obj',
-      origin: [103.91927166313951,1.404140424510686],
-      scale: 0.937,
-    });
-    map.addLayer(aonCenterLayer2);
-
     // add mapbox buildings
     const mapboxBuildingsLayer = layerManager.getMapboxBuildingsLayer();
     map.addLayer(mapboxBuildingsLayer);
