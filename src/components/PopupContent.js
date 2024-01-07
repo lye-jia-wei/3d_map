@@ -34,8 +34,7 @@ class PopupContent extends React.Component {
         <section>
           <h1>Location</h1>
           <p className="help-text">
-            To edit coordinates, drag the marker on the map or click the text below and start typing. Hit Enter ↵ when you're
-            done.
+
           </p>
 
           <div className="coordinate">
@@ -97,7 +96,7 @@ class PopupContent extends React.Component {
   }
 
   getWeatherText() {
-    return `It's ${Math.floor(this.getWeather().data.temperature)}°F with ${this.getWeather().data.description}.`;
+    return `It's ${Math.floor(this.getWeather().data.temperature)}°C with ${this.getWeather().data.description}.`;
   }
 }
 
