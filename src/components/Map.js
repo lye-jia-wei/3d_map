@@ -46,7 +46,7 @@ class Map extends React.Component {
 
   async fetchApiData() {
     try {
-      const apiUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=83139'; // Replace with your actual API endpoint
+      const apiUrl = 'https://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=83139'; // Replace with your actual API endpoint
       const apiKey = '3pOFoHepSZWLinomZvIzaw=='; // Replace with your actual API key
       const response = await fetch(apiUrl, {
         method: 'GET',
