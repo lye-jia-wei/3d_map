@@ -11,6 +11,7 @@ import LayerManager from '../map-utils/layer-manager';
 import Marker from './Marker';
 import SatelliteOverlayToggle from './SatelliteOverlayToggle';
 import './Map.css';
+import './PopupContent.css';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoicGFuYmFsYW5nYSIsImEiOiJjam55MXU0aWMxNzN5M3Byd2NmYzR3Y24wIn0.0HbKIGeEpiDqh4ezOQOw-Q';
 
@@ -18,6 +19,7 @@ class Map extends React.Component {
   constructor(props) {
     super(props);
     this._map = undefined;
+    this._popup = new mapboxgl.Popup({ offset: 25 }); // Create a popup instance
     this.state = {
       apiData: null,
     };
@@ -38,7 +40,6 @@ class Map extends React.Component {
 
     map.on('load', () => {
       this.mapDidLoad();
-      this.updatePopupContent(); // Automatically update the popup content on map load
     });
 
     map.on('click', this.handleMapClick.bind(this));
@@ -46,17 +47,21 @@ class Map extends React.Component {
 
   async fetchApiData() {
     try {
-      const apiUrl = 'https://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=83139'; // Replace with your actual API endpoint
-      const apiKey = '3pOFoHepSZWLinomZvIzaw=='; // Replace with your actual API key
+      const apiUrl = 'https://arrivelah2.busrouter.sg/?id=65569'; // Replace with your actual API endpoint
+  
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'AccountKey': apiKey,
           'Accept': 'application/json',
         },
         redirect: 'follow',
       });
+  
       const data = await response.json();
+      
+      // Log the fetched data to the console
+      console.log('Fetched data:', data);
+  
       return data;
     } catch (error) {
       console.error('Error fetching API data', error);
@@ -67,9 +72,53 @@ class Map extends React.Component {
   async updatePopupContent() {
     try {
       const apiData = await this.fetchApiData();
-      this.setState({ apiData });
+  
+      // Extracting relevant information
+      const { services } = apiData;
+      const firstService = services[0];
+  
+      // Check if the services array is not empty
+      if (firstService) {
+        const { no, next, subsequent, next2 } = firstService;
+  
+        // Log the values to the console
+        console.log('Bus No:', no);
+        console.log('Next Bus:', next);
+        console.log('Following Bus', subsequent);
+        console.log('Next2 Arrival:', next2);
+  
+        // Format the time strings (you can use a library like moment.js for better formatting)
+        const nextArrivalTime = new Date(next.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
+        const subsequentArrivalTime = new Date(subsequent.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
+        const next2ArrivalTime = new Date(next2.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
+  
+        // Update the popup content with specific information
+        const popupContent = `
+        <section className="weather">
+        <h1>Bus Stop Information | Blk 654D (Punggol East)</h1>
+        <section>
+        </section>
+
+        <section>
+        <p className="help-text">
+        <p><strong>Bus No:</strong> ${no}</p>
+        <p><strong>Next Bus:</strong> ${nextArrivalTime}</p>
+        <p><strong>Following Bus:</strong> ${subsequentArrivalTime}</p>
+      </p>
+      </section>
+
+
+      `;
+  
+        // Set the updated content to the popup
+        this._popup.setHTML(popupContent);
+        // Use the coordinates of a specific point or marker to open the popup
+        const lngLat = [103.919207, 1.398591]; // Specify the longitude and latitude
+        this._popup.setLngLat(lngLat).addTo(this._map);
+      }
     } catch (error) {
       // Handle errors
+      console.error('Error updating popup content', error);
     }
   }
 
@@ -112,15 +161,7 @@ class Map extends React.Component {
 
     map.addControl(new mapboxgl.NavigationControl());
 
-    const marker1 = new mapboxgl.Marker()
-      .setLngLat([103.91876322712682, 1.4043535344988385])
-      .addTo(map);
-
-    const popup = new mapboxgl.Popup({ offset: 25 })
-      .setHTML(`<p>Loading...</p>`);
-
-    marker1.setPopup(popup);
-    marker1.togglePopup();
+    this.updatePopupContent();
 
     ReactDOM.render(
       <SatelliteOverlayToggle
@@ -145,19 +186,11 @@ class Map extends React.Component {
   }
 
   render() {
-    const { apiData } = this.state;
-
     return (
       <div ref={el => (this.mapContainer = el)} className="mapContainer">
         {this.getUserPoints().map((userPoint) => (
           <Marker userPointId={userPoint.id} key={userPoint.id} map={this} />
         ))}
-        {apiData && (
-          <div className="popup-content">
-            <p>API Data:</p>
-            <pre>{JSON.stringify(apiData, null, 2)}</pre>
-          </div>
-        )}
       </div>
     );
   }
@@ -187,4 +220,3 @@ const mapStateToProps = (state) => ({
 });
 
 export default connect(mapStateToProps)(Map);
-
