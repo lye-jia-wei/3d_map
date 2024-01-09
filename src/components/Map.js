@@ -12,23 +12,22 @@ import Marker from './Marker';
 import SatelliteOverlayToggle from './SatelliteOverlayToggle';
 import './Map.css';
 
-// REVIEW may want to obfuscate this somehow. see note about weather api token
-// in PopupContent.js
 mapboxgl.accessToken = 'pk.eyJ1IjoicGFuYmFsYW5nYSIsImEiOiJjam55MXU0aWMxNzN5M3Byd2NmYzR3Y24wIn0.0HbKIGeEpiDqh4ezOQOw-Q';
 
 class Map extends React.Component {
   constructor(props) {
     super(props);
-
     this._map = undefined;
+    this.state = {
+      apiData: null,
+    };
   }
 
   componentDidMount() {
-    // init and configure map
     const map = new mapboxgl.Map({
       container: this.mapContainer,
-      style: 'mapbox://styles/mapbox/dark-v10',
-      center: [103.91721586504343,1.4060810835492106],
+      style: 'https://www.onemap.gov.sg/maps/json/raster/mbstyle/Default.json',
+      center: [103.91721586504343, 1.4060810835492106],
       zoom: 16,
       pitch: 60,
       bearing: -20,
@@ -37,63 +36,92 @@ class Map extends React.Component {
 
     this._map = map;
 
-    map.on('load', this.mapDidLoad.bind(this));
+    map.on('load', () => {
+      this.mapDidLoad();
+      this.updatePopupContent(); // Automatically update the popup content on map load
+    });
+
     map.on('click', this.handleMapClick.bind(this));
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.shouldShowSatelliteOverlay === true) {
-      if (prevProps.shouldShowSatelliteOverlay === false) {
-        // add satellite overlay
-        // TODO this could go into the LayerManager, but it's fairly simple so
-        // leaving it here for now.
-        // also this might be an improvement:
-        // https://docs.mapbox.com/mapbox-gl-js/example/toggle-layers/
-        this._map.addLayer(
-          {
-            id: 'satellite',
-            source: 'satellite',
-            type: 'raster',
-          },
-          'aon-center'
-        );
-      }
-    } else if (prevProps.shouldShowSatelliteOverlay === true) {
-      this._map.removeLayer('satellite');
+  async fetchApiData() {
+    try {
+      const apiUrl = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=83139'; // Replace with your actual API endpoint
+      const apiKey = '3pOFoHepSZWLinomZvIzaw=='; // Replace with your actual API key
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'AccountKey': apiKey,
+          'Accept': 'application/json',
+        },
+        redirect: 'follow',
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching API data', error);
+      throw error;
     }
   }
+
+  async updatePopupContent() {
+    try {
+      const apiData = await this.fetchApiData();
+      this.setState({ apiData });
+    } catch (error) {
+      // Handle errors
+    }
+  }
+
   mapDidLoad() {
     const map = this._map;
 
-    // init layer manager
     const layerManager = new LayerManager(map);
+    map.addSource('onemap', {
+      type: 'vector',
+      tiles: ['https://www.onemap.gov.sg/maps/json/raster/mbstyle/Default.json'],
+      minzoom: 0,
+      maxzoom: 18,
+    });
 
-    // remove labels
     map.style.stylesheet.layers.forEach((layer) => {
       if (layer.type === 'symbol') {
         map.removeLayer(layer.id);
       }
     });
 
-    // add aon center
-    // source: https://www.turbosquid.com/3d-models/simply-city-street-3ds-free/337573
     const aonCenterLayer = layerManager.getCustomObjLayer({
       id: 'aon-center',
       filePath: process.env.PUBLIC_URL + '/aon-center.obj',
-      origin: [103.91721586504343,1.4060810835492106],
+      origin: [103.91721586504343, 1.4060810835492106],
       scale: 0.537,
     });
     map.addLayer(aonCenterLayer);
 
-    // add mapbox buildings
     const mapboxBuildingsLayer = layerManager.getMapboxBuildingsLayer();
     map.addLayer(mapboxBuildingsLayer);
+    map.addLayer({
+      id: 'onemap-layer',
+      type: 'fill',
+      source: 'onemap',
+      layout: {},
+      paint: {
+        'fill-color': 'rgba(255, 0, 0, 0.5)',
+      },
+    });
 
-    // add navigation control
     map.addControl(new mapboxgl.NavigationControl());
 
-    // add satellite overlay toggle
-    // see SatelliteOverlayToggle.js for notes on how this works with the dom
+    const marker1 = new mapboxgl.Marker()
+      .setLngLat([103.91876322712682, 1.4043535344988385])
+      .addTo(map);
+
+    const popup = new mapboxgl.Popup({ offset: 25 })
+      .setHTML(`<p>Loading...</p>`);
+
+    marker1.setPopup(popup);
+    marker1.togglePopup();
+
     ReactDOM.render(
       <SatelliteOverlayToggle
         didMount={this.satelliteOverlayToggleDidMount.bind(this)}
@@ -103,7 +131,6 @@ class Map extends React.Component {
       document.getElementById('satellite-overlay-toggle')
     )
 
-    // add satellite source
     map.addSource(
       'satellite',
       {
@@ -118,14 +145,19 @@ class Map extends React.Component {
   }
 
   render() {
+    const { apiData } = this.state;
+
     return (
-      <div ref={el => this.mapContainer = el} className="mapContainer">
-        {this.getUserPoints().map((userPoint) => {
-          return <Marker userPointId={userPoint.id}
-                         key={userPoint.id}
-                         map={this}
-                 />;
-        })}
+      <div ref={el => (this.mapContainer = el)} className="mapContainer">
+        {this.getUserPoints().map((userPoint) => (
+          <Marker userPointId={userPoint.id} key={userPoint.id} map={this} />
+        ))}
+        {apiData && (
+          <div className="popup-content">
+            <p>API Data:</p>
+            <pre>{JSON.stringify(apiData, null, 2)}</pre>
+          </div>
+        )}
       </div>
     );
   }
@@ -139,27 +171,11 @@ class Map extends React.Component {
   }
 
   handleMapClick(e) {
-    /*
-    ignore marker click events
-
-    problem: clicking on a map marker fires a map click event before the marker
-    click event, which means a new marker gets created each time. because the
-    map event comes first, we can't use event.stopPropagation() to prevent the
-    duplicate event.
-
-    solution: this checks map click events to see if the target is a marker, and
-    ignores them. this isn't ideal, so...
-
-    TODO: find out why the map click event fires first. maybe a side effect of
-    using react + mapboxgl?
-    */
-
     const isMarkerClick = e.originalEvent.target.classList.contains('marker');
     if (isMarkerClick) return;
 
-    // the mapbox lnglat has extra stuff we don't need. paring it down here.
     const { lng, lat } = e.lngLat;
-    const lngLat = { lng, lat};
+    const lngLat = { lng, lat };
 
     this.props.dispatch(addUserPoint(lngLat));
   }
@@ -171,3 +187,4 @@ const mapStateToProps = (state) => ({
 });
 
 export default connect(mapStateToProps)(Map);
+
