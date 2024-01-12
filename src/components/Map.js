@@ -28,7 +28,8 @@ class Map extends React.Component {
   componentDidMount() {
     const map = new mapboxgl.Map({
       container: this.mapContainer,
-      style: 'https://www.onemap.gov.sg/maps/json/raster/mbstyle/Default.json',
+      style: 'mapbox://styles/mapbox/dark-v10',
+      //style: 'https://www.onemap.gov.sg/maps/json/raster/mbstyle/Night.json',
       center: [103.91721586504343, 1.4060810835492106],
       zoom: 16,
       pitch: 60,
@@ -133,6 +134,121 @@ class Map extends React.Component {
       maxzoom: 18,
     });
 
+
+    map.addSource('traffic', {
+      type: 'vector',
+      url: 'mapbox://mapbox.mapbox-traffic-v1',
+    });
+
+
+    
+    // Add traffic layer
+    map.addLayer({
+      id: 'traffic-layer-severe',
+      type: 'line',
+      source: 'traffic',
+      'source-layer': 'traffic',
+      filter: ['==', ['get', 'congestion'], 'severe'], // Severe congestion filter
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': 'red',
+        'line-opacity': 0.8,
+        'line-width': 6,
+      },
+      visibility: 'visible', // Set to 'visible' to initially show the layer
+    });
+    
+    // Add layer for heavy congestion (yellow lines)
+    map.addLayer({
+      id: 'traffic-layer-heavy',
+      type: 'line',
+      source: 'traffic',
+      'source-layer': 'traffic',
+      filter: ['==', ['get', 'congestion'], 'heavy'], // Heavy congestion filter
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': 'yellow',
+        'line-opacity': 0.8,
+        'line-width': 6,
+      },
+      visibility: 'visible', // Set to 'visible' to initially show the layer
+    });
+    
+    // Add layer for moderate congestion (orange lines)
+    map.addLayer({
+      id: 'traffic-layer-moderate',
+      type: 'line',
+      source: 'traffic',
+      'source-layer': 'traffic',
+      filter: ['==', ['get', 'congestion'], 'moderate'], // Moderate congestion filter
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': 'orange',
+        'line-opacity': 0.8,
+        'line-width': 6,
+      },
+      visibility: 'visible', // Set to 'visible' to initially show the layer
+    });
+    
+    // Add layer for low congestion (green lines)
+    map.addLayer({
+      id: 'traffic-layer-low',
+      type: 'line',
+      source: 'traffic',
+      'source-layer': 'traffic',
+      filter: ['==', ['get', 'congestion'], 'low'], // Low congestion filter
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': 'green',
+        'line-opacity': 0.8,
+        'line-width': 6,
+      },
+      visibility: 'visible', // Set to 'visible' to initially show the layer
+    });
+
+
+    const popupContent2 = `
+    <section className="weather">
+    <h1>EOT Facilities (CC1)</h1>
+
+    <section>
+    
+    </section>
+
+    <section>
+    <img src="https://i.ibb.co/cJHfpvg/eot.png" alt="Image Description">
+    <p style="font-size: 14px; text-align: justify;  color: #888;">EOT Facilities provide a safe bicycle locker to store your bicycle, equipped with shower amenities</p>
+    <p style="font-size: 14px;><strong>Bicycle Locker Availabity</strong> 4 Lockers</p>
+    <p style="font-size: 14px;><strong>Bicycle Locker Availability:</strong> 2 Lockers</p>
+
+
+  </section>
+
+
+  `;
+
+    const popup = new mapboxgl.Popup({ offset: 25 })
+    .setLngLat([103.92179241561968, 1.4006758793912013])
+    .setHTML(popupContent2)
+    .addTo(map);
+
+    const trafficToggleBtn = document.createElement('button');
+    trafficToggleBtn.textContent = 'Toggle Traffic Layer';
+    trafficToggleBtn.addEventListener('click', () => this.toggleTrafficLayer());
+    map.getContainer().appendChild(trafficToggleBtn);
+
     map.style.stylesheet.layers.forEach((layer) => {
       if (layer.type === 'symbol') {
         map.removeLayer(layer.id);
@@ -147,6 +263,52 @@ class Map extends React.Component {
     });
     map.addLayer(aonCenterLayer);
 
+    const aonCenterLayer2 = layerManager.getCustomObjLayer({
+      id: 'aon-center2',
+      filePath: process.env.PUBLIC_URL + '/parking-lot.obj',
+      origin: [103.92172627383897, 1.4008661898365082],
+      scale: 0.937,
+    });
+    map.addLayer(aonCenterLayer2);
+    const originalRectangleCoordinates = [
+      [103.9215, 1.4008],
+      [103.9215, 1.4012],
+      [103.922, 1.4012],
+      [103.922, 1.4008],
+      [103.9215, 1.4008],
+    ];
+    
+    // Calculate the smaller rectangle coordinates by reducing each dimension by 60%
+    const reductionPercentage = 0.21;
+    const smallerRectangleCoordinates = originalRectangleCoordinates.map(([lng, lat], index) => {
+      const center = [103.92175, 1.401];
+    
+      // Calculate the new coordinates based on the reduction factor
+      const newLng = center[0] + (lng - center[0]) * reductionPercentage;
+      const newLat = center[1] + (lat - center[1]) * reductionPercentage;
+    
+      return [newLng, newLat];
+    });
+    
+    // Add the smaller green rectangle to the map
+    map.addLayer({
+      id: 'smaller-green-rectangle',
+      type: 'fill',
+      source: {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [smallerRectangleCoordinates],
+          },
+        },
+      },
+      paint: {
+        'fill-color': 'green',
+        'fill-opacity': 0.5,
+      },
+    });
     const mapboxBuildingsLayer = layerManager.getMapboxBuildingsLayer();
     map.addLayer(mapboxBuildingsLayer);
     map.addLayer({
@@ -160,6 +322,8 @@ class Map extends React.Component {
     });
 
     map.addControl(new mapboxgl.NavigationControl());
+
+    
 
     this.updatePopupContent();
 
@@ -181,6 +345,14 @@ class Map extends React.Component {
     );
   }
 
+
+  toggleTrafficLayer() {
+    const map = this._map;
+    const visibility = map.getLayoutProperty('traffic-layer', 'visibility');
+
+    // Toggle the visibility of the traffic layer
+    map.setLayoutProperty('traffic-layer', 'visibility', visibility === 'visible' ? 'none' : 'visible');
+  }
   satelliteOverlayToggleDidMount(comp) {
     this._map.addControl(comp);
   }
