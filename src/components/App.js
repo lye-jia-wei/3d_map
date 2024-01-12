@@ -11,21 +11,13 @@ class App extends React.Component {
         <div>
           <header>
             <div className="title">
-              <img src="aon-logo.svg" className="logo" alt="AON" />
-              <span className="center">Center +</span>
+              <span className="center">Interactive Map</span>
             </div>
             <p className="help-text">
-              This app uses Mapbox GL to render a 3D building representing AON Center in Downtown
-              Chicago.
+              Explore shops and amenities by clicking on the map. 
+
             </p>
-            <p className="help-text">
-              Explore nearby locations by clicking on the map. A marker will appear with the current
-              weather, along with the latitude and longitude of that point.
-            </p>
-            <p className="help-text">
-              To toggle satellite imagery, click the <i className="fas fa-globe"></i> button just below the navigation controls
-              in the upper-right corner of the map.
-            </p>
+
           </header>
           <Map />
         </div>
